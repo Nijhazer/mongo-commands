@@ -29,6 +29,10 @@ async function dropCollectionIfExists(db, collectionName) {
   }
 }
 
+async function getCollectionTotalDocumentCount(db, collectionName) {
+  return await db.collection(collectionName).count({});
+}
+
 class CopyCollectionToLocal extends BaseCommand {
   constructor() {
     super();
@@ -45,6 +49,12 @@ class CopyCollectionToLocal extends BaseCommand {
     const collectionName = this.params['collection-name'];
     try {
       const remoteDB = await this.getRemoteDB();
+      const sourceDocumentCount = await getCollectionTotalDocumentCount(remoteDB, collectionName);
+      if (sourceDocumentCount >= 10000) {
+        console.warn(`The collection you have requested, '${collectionName}', has ${sourceDocumentCount} documents in it. Copying this collection will take a significant amount of time.`);
+        this.closeConnections();
+        return;
+      }
       const docs = await fetchAllDocsInCollection(remoteDB, collectionName);
       console.log(`Copying ${docs.length} documents from remote DB to local collection '${collectionName}'...`);
       const localDB = await this.getLocalDB();

@@ -34,8 +34,12 @@ class BaseCommand {
   }
 
   closeConnections() {
-    this.remoteClient.close();
-    this.localClient.close();
+    if (this.remoteClient) {
+      this.remoteClient.close();
+    }
+    if (this.localClient) {
+      this.localClient.close();
+    }
   }
 }
 
