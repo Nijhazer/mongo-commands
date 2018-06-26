@@ -1,14 +1,4 @@
-const MongoClient = require('mongodb').MongoClient,
-  parseMongoURL = require('parse-mongo-url');
-
 const BaseCommand = require('./base');
-
-const remoteDBURI = process.env['MONGODB'],
-      parsedRemoteDBURI = parseMongoURL(remoteDBURI),
-      remoteDBName = parsedRemoteDBURI.dbName,
-      localDBURI = process.env['MONGODB_LOCAL'],
-      parsedLocalDBURI = parseMongoURL(localDBURI),
-      localDBName = parsedLocalDBURI.dbName;
 
 async function fetchAllDocsInCollection(db, collectionName) {
   return await db.collection(collectionName).find({}).toArray();
@@ -54,16 +44,13 @@ class CopyCollectionToLocal extends BaseCommand {
   async run() {
     const collectionName = this.params['collection-name'];
     try {
-      const remoteClient = await MongoClient.connect(remoteDBURI);
-      const remoteDB = remoteClient.db(remoteDBName);
+      const remoteDB = await this.getRemoteDB();
       const docs = await fetchAllDocsInCollection(remoteDB, collectionName);
       console.log(`Copying ${docs.length} documents from remote DB to local collection '${collectionName}'...`);
-      remoteClient.close();
-      const localClient = await MongoClient.connect(localDBURI);
-      const localDB = localClient.db(localDBName);
+      const localDB = await this.getLocalDB();
       await dropCollectionIfExists(localDB, collectionName);
       await createCollection(localDB, collectionName, docs);
-      localClient.close();
+      this.closeConnections();
       console.log('Done.');
     } catch (err) {
       console.error(err.stack);

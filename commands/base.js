@@ -1,6 +1,14 @@
-const commandLineArgs = require('command-line-args');
+const commandLineArgs = require('command-line-args'),
+  MongoClient = require('mongodb').MongoClient,
+  parseMongoURL = require('parse-mongo-url');
 
-const baseParamDefs = [];
+const remoteDBURI = process.env['MONGODB'],
+  parsedRemoteDBURI = parseMongoURL(remoteDBURI),
+  remoteDBName = parsedRemoteDBURI.dbName,
+  localDBURI = process.env['MONGODB_LOCAL'],
+  parsedLocalDBURI = parseMongoURL(localDBURI),
+  localDBName = parsedLocalDBURI.dbName,
+  baseParamDefs = [];
 
 class BaseCommand {
   setup() {
@@ -13,6 +21,21 @@ class BaseCommand {
         throw new Error(`Param '${paramDef.name}' is required.`);
       }
     }
+  }
+
+  async getLocalDB() {
+    this.localClient = await MongoClient.connect(localDBURI);
+    return this.localClient.db(localDBName);
+  }
+
+  async getRemoteDB() {
+    this.remoteClient = await MongoClient.connect(remoteDBURI);
+    return this.remoteClient.db(remoteDBName);
+  }
+
+  closeConnections() {
+    this.remoteClient.close();
+    this.localClient.close();
   }
 }
 
