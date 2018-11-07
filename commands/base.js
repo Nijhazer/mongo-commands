@@ -1,6 +1,8 @@
 const commandLineArgs = require('command-line-args'),
   MongoClient = require('mongodb').MongoClient,
-  parseMongoURL = require('parse-mongo-url');
+  parseMongoURL = require('parse-mongo-url'),
+  path = require('path'),
+  util = require('../util');
 
 const remoteDBURI = process.env['MONGODB'],
   parsedRemoteDBURI = parseMongoURL(remoteDBURI),
@@ -11,6 +13,13 @@ const remoteDBURI = process.env['MONGODB'],
   baseParamDefs = [];
 
 class BaseCommand {
+  constructor(options = {}) {
+    for (let optionKey of Object.keys(options)) {
+      this[optionKey] = options[optionKey];
+    }
+    console.log(`Invoking command: ${this.name}`);
+  }
+
   setup() {
     const paramDefs = baseParamDefs.concat(this.paramDefs || []);
     this.params = commandLineArgs(paramDefs, {
@@ -21,6 +30,21 @@ class BaseCommand {
         throw new Error(`Param '${paramDef.name}' is required.`);
       }
     }
+  }
+
+  async loadInput() {
+    const inputPath = path.join(__dirname, '..', 'data', `${this.name}.dat`);
+    try {
+      const input = await util.readFile(inputPath);
+      this.input = input;
+    } catch (e) {
+      this.input = null;
+    }
+  }
+
+  async loadCSVInput(headings) {
+    await this.loadInput();
+    this.input = await util.parseCSVData(this.input, headings);
   }
 
   async getLocalDB() {
