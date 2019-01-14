@@ -27,7 +27,7 @@ class FindURLSlug extends BaseCommand {
             }
         }).toArray();
         const urlSlug = vehicleModelsResponse[0].url_slug;
-        console.log(`"${contentID}","${make}","${model}",${urlSlug}"`);
+        console.log(`"${contentID}","${make}","${model}","${urlSlug}"`);
     }
   }
 }
