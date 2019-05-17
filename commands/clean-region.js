@@ -73,17 +73,18 @@ class CleanRegion extends BaseCommand {
             },
             "$unset": {}
         };
+        let regID, valueKey;
         switch (type) {
             case 'chart':
-                const regIDKey = 'data.dimensions.reg_id';
-                const regID = _.get(card, regIDKey);
+                valueKey = 'data.dimensions.reg_id';
+                regID = _.get(card, valueKey);
                 if (regID && !Array.isArray(regID)) {
-                    updateRequestBody.$unset[regIDKey] = 1;
+                    updateRequestBody.$unset[valueKey] = 1;
                 }
                 break;
             case 'table':
                 for (let key of ['columns', 'rows']) {
-                    const valueKey = `data.${key}`;
+                    valueKey = `data.${key}`;
                     const values = _.get(card, valueKey);
                     let update = false;
                     let valueUpdates = [];    
@@ -100,6 +101,11 @@ class CleanRegion extends BaseCommand {
                     if (update) {
                         updateRequestBody.$set[valueKey] = valueUpdates;
                     }
+                }
+                valueKey = 'data.filters.reg_id';
+                regID = _.get(card, valueKey);
+                if (regID && !Array.isArray(regID)) {
+                    updateRequestBody.$unset[`${valueKey}`] = 1;
                 }
                 break;
         }
