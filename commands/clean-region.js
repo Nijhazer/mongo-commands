@@ -29,12 +29,32 @@ class CleanRegion extends BaseCommand {
     }, {
         projection: {
             "_id": 1,
-            "cards": 1
+            "metadata.title": 1,
+            "cards": 1,
+            "children": 1
         }
     }).toArray();
     const cardIds = collectionCards.reduce((coll, item) => {
         return coll.concat(item.cards.map(card => `${card.id}`));
     }, []);
+    const compositeCards = await remoteDB.collection('card').find({
+        "_id": {
+            "$in": cardIds.map(id => new ObjectID(id)),
+        },
+        "metadata.type": "composite",
+        "children.1": {
+            "$exists": true
+        }
+    }, {
+        projection: {
+            "children": 1
+        }
+    }).toArray();
+    for (let compositeCard of compositeCards) {
+        for (let child of compositeCard.children) {
+            cardIds.push(`${child.id}`);
+        }
+    }
     const cards = await remoteDB.collection('card').find({
         "_id": {
             "$in": cardIds.map(id => new ObjectID(id))
@@ -93,12 +113,17 @@ class CleanRegion extends BaseCommand {
             "body": updateRequestBody
         });
     }
-    const collection = remoteDB.collection("card");
-    for (let { where, body } of updateRequests) {
-        try {
-            await collection.updateOne(where, body);
-        } catch (e) {
-            console.error(e, 'error');
+    if (updateRequests.length === 0) {
+        console.info("No updates needed");
+    } else {
+        const collection = remoteDB.collection("card");
+        for (let { where, body } of updateRequests) {
+            try {
+                console.log(where, 'Updating...');
+                const response = await collection.updateOne(where, body);
+            } catch (e) {
+                console.error(e, 'error');
+            }
         }
     }
     this.closeConnections();
