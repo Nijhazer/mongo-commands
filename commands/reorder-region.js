@@ -9,8 +9,8 @@ const REORDER_REGION_IF_INCLUDED = 32;
 const DESIRED_ORDER = [
     361, 
     32,
-    421,
     442,
+    421,
     324
 ];
 
@@ -87,7 +87,6 @@ class ReorderRegion extends BaseCommand {
             try {
                 console.log(where, 'Updating...');
                 let response = await collection.updateOne(where, body);
-                console.log(response);
             } catch (e) {
                 console.error(e, 'error');
             }
