@@ -5,7 +5,7 @@ const BaseCommand = require('./base');
 const ObjectID = require('mongodb').ObjectID;
 
 
-class CopyCollections extends BaseCommand {
+class CleanRegion extends BaseCommand {
   async run() {
     const remoteDB = await this.getRemoteDB();
     const collections = await remoteDB.collection('collection').find({
@@ -106,4 +106,4 @@ class CopyCollections extends BaseCommand {
   }
 }
 
-module.exports = CopyCollections;
+module.exports = CleanRegion;
