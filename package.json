@@ -6,7 +6,7 @@
   "dependencies": {
     "command-line-args": "^5.0.2",
     "csv": "^3.1.0",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.21",
     "mongodb": "^3.0.10",
     "parse-mongo-url": "^1.1.1"
   },
